@@ -1,0 +1,55 @@
+services:
+  eventmesh:
+    container_name: eventmesh
+    image: fronted-cn-beijing.cr.volces.com/container/apache/eventmesh:v1.11.0
+    ports:
+      - "10000:10000"
+      - "10105:10105"
+      - "10205:10205"
+      - "10106:10106"
+    depends_on:
+      - namesrv
+      - broker
+    networks:
+      - eventmesh
+
+
+  namesrv:
+    image: fronted-cn-beijing.cr.volces.com/container/apache/rocketmq:4.9.4
+    ports:
+      - "9876:9876"
+    command:
+      - sh
+      - mqnamesrv
+    networks:
+      - eventmesh
+
+  broker:
+    image: fronted-cn-beijing.cr.volces.com/container/apache/rocketmq:4.9.4
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    command:
+      - sh
+      - mqbroker
+    depends_on:
+      - namesrv
+    environment:
+      - NAMESRV_ADDR=namesrv:9876
+    networks:
+      - eventmesh
+
+  rocketmq-dashboard:
+    image: fronted-cn-beijing.cr.volces.com/container/apacherocketmq/rocketmq-dashboard:1.0.0
+    container_name: rocketmq-dashboard
+    ports:
+      - "8080:8080"
+    environment:
+      - JAVA_OPTS=-Drocketmq.namesrv.addr=namesrv:9876
+    depends_on:
+      - namesrv
+    networks:
+      - eventmesh
+
+networks:
+  eventmesh:
